@@ -14,11 +14,11 @@ for application_key in application_keys:
     serialized_application_raw_data = r_server.get(application_key)
     application_raw_data = pickle.loads(serialized_application_raw_data)
 
-    application_id = application_raw_data['app_id']
-    application_url = application_raw_data['app_url']
+    app_id = application_raw_data['app_id']
+    app_url = application_raw_data['app_url']
 
     application_soup = pq(
-        application_url,
+        app_url,
         headers={'User-Agent': user_agent}
     )
 
@@ -28,7 +28,17 @@ for application_key in application_keys:
     app_title = body_content('.info-container .document-title').text()
 
     ## application thumbnail
-    app_thumbnail = body_content('img.cover-image')[0].attrib['src']
+    app_icon = body_content('img.cover-image')[0].attrib['src']
+
+    ## application price
+    app_price = ''
+    button_buy = body_content('button.price.buy')
+    price_meta_data = button_buy('meta')
+    for price_meta in price_meta_data:
+        if price_meta.attrib['itemprop'] == 'price':
+            app_price = price_meta.attrib['content']
+            pass
+        pass
 
     ## number of badges like Top Developer, Editors Choice
     special_badges = body_content('.header-star-badge .badge')
@@ -41,8 +51,8 @@ for application_key in application_keys:
     ## application rating value && count
     rating_box = body_content('.rating-box .score-container')
     rating_meta_data = rating_box('meta')
-    rating_value = 0
-    rating_count = 0
+    rating_value = ''
+    rating_count = ''
     for rating_meta in rating_meta_data:
         if rating_meta.attrib['itemprop'] == 'ratingValue':
             rating_value = rating_meta.attrib['content']
@@ -52,16 +62,50 @@ for application_key in application_keys:
             pass
         pass
 
+    ## application updated date and number of installs
+    app_updated = ''
+    app_installs = ''
+    additional_information = body_content('.details-section-contents')
+    additional_meta_data = additional_information('.meta-info')
+    for additional_meta in additional_meta_data:
+        additional_meta_content = additional_meta_data(additional_meta)('.content')
+        # additional_meta_content = additional_meta('.content')
+        try:
+            if additional_meta_content[0].attrib['itemprop'] == 'datePublished':
+                app_updated = additional_meta_content.text()
+                pass
+            elif additional_meta_content[0].attrib['itemprop'] == 'numDownloads':
+                app_installs = additional_meta_content.text()
+                pass
+            else:
+                pass
+            pass
+        except KeyError:
+            ## there can be situations additional_meta_content don't have 'itemprop'
+            pass
+
+    ## screen shots
+    app_thumbnails = []
+    thumbnails_soups = body_content('.thumbnails .screenshot')
+    for thumbnail in thumbnails_soups:
+        thumbnail_url = thumbnail.attrib['src']
+        app_thumbnails.append(thumbnail_url)
+        pass
+
     ## make a application object
     application = {
+        'id': app_id,
+        'url': app_url,
         'title': app_title,
-        'thumbnail': app_thumbnail,
+        'icon': app_icon,
         'badges': number_of_badges,
         'rating': rating_value,
         'rating_count': rating_count,
-        'updated': 'updated',
-        'installs': 'installs',
-        'description': app_description
+        'updated': app_updated,
+        'installs': app_installs,
+        'description': app_description,
+        'price': app_price,
+        'thumbnails': app_thumbnails
     }
 
     scraped_applications.append(application)
