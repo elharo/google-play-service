@@ -10,6 +10,56 @@ set_key = 'set_priority_x'
 r_server = redis.Redis("localhost")
 application_keys = r_server.smembers(set_key)
 
+
+def get_app_title(content):
+    return content('.info-container .document-title').text()
+    pass
+
+
+def get_app_icon(content):
+    return content('img.cover-image')[0].attrib['src']
+    pass
+
+
+def get_app_price(content):
+    price = ''
+    button_buy = content('button.price.buy')
+    price_meta_data = button_buy('meta')
+    for price_meta in price_meta_data:
+        if price_meta.attrib['itemprop'] == 'price':
+            price = price_meta.attrib['content']
+            pass
+        pass
+    return price
+    pass
+
+
+def get_number_of_badges(content):
+    special_badges = content('.header-star-badge .badge')
+    return len(special_badges)
+    pass
+
+
+def get_app_description(content):
+    description_content = content('.description .id-app-orig-desc')
+    return description_content.html()
+    pass
+
+
+def get_app_thumbnails(content):
+    thumbnails_urls = []
+    thumbnails_soups = body_content('.thumbnails .screenshot')
+    for thumbnail in thumbnails_soups:
+        try:
+            thumbnail_url = thumbnail.attrib['src']
+            thumbnails_urls.append(thumbnail_url)
+        except KeyError:
+            pass
+        pass
+    return thumbnails_urls
+    pass
+
+
 for application_key in application_keys:
     serialized_application_raw_data = r_server.get(application_key)
     application_raw_data = pickle.loads(serialized_application_raw_data)
@@ -25,42 +75,40 @@ for application_key in application_keys:
     body_content = application_soup('#body-content')
 
     ## application title
-    app_title = body_content('.info-container .document-title').text()
+    app_title = get_app_title(body_content)
 
     ## application thumbnail
-    app_icon = body_content('img.cover-image')[0].attrib['src']
+    app_icon = get_app_icon(body_content)
 
     ## application price
-    app_price = ''
-    button_buy = body_content('button.price.buy')
-    price_meta_data = button_buy('meta')
-    for price_meta in price_meta_data:
-        if price_meta.attrib['itemprop'] == 'price':
-            app_price = price_meta.attrib['content']
-            pass
-        pass
+    app_price = get_app_price(body_content)
 
     ## number of badges like Top Developer, Editors Choice
-    special_badges = body_content('.header-star-badge .badge')
-    number_of_badges = len(special_badges)
+    app_badges_count = get_number_of_badges(body_content)
 
     ## application description
-    description_content = body_content('.description .id-app-orig-desc')
-    app_description = description_content.html()
+    app_description = get_app_description(body_content)
+
+    ## application screen shots
+    app_thumbnails = get_app_thumbnails(body_content)
 
     ## application rating value && count
     rating_box = body_content('.rating-box .score-container')
     rating_meta_data = rating_box('meta')
-    rating_value = ''
-    rating_count = ''
+    app_rating_value = ''
+    app_rating_count = ''
     for rating_meta in rating_meta_data:
-        if rating_meta.attrib['itemprop'] == 'ratingValue':
-            rating_value = rating_meta.attrib['content']
+        try:
+            if rating_meta.attrib['itemprop'] == 'ratingValue':
+                app_rating_value = rating_meta.attrib['content']
+                pass
+            elif rating_meta.attrib['itemprop'] == 'ratingCount':
+                app_rating_count = rating_meta.attrib['content']
+                pass
             pass
-        elif rating_meta.attrib['itemprop'] == 'ratingCount':
-            rating_count = rating_meta.attrib['content']
+        except KeyError:
+            ## there can be situations additional_meta_content don't have 'itemprop'
             pass
-        pass
 
     ## application updated date and number of installs
     app_updated = ''
@@ -84,23 +132,15 @@ for application_key in application_keys:
             ## there can be situations additional_meta_content don't have 'itemprop'
             pass
 
-    ## screen shots
-    app_thumbnails = []
-    thumbnails_soups = body_content('.thumbnails .screenshot')
-    for thumbnail in thumbnails_soups:
-        thumbnail_url = thumbnail.attrib['src']
-        app_thumbnails.append(thumbnail_url)
-        pass
-
     ## make a application object
     application = {
         'id': app_id,
         'url': app_url,
         'title': app_title,
         'icon': app_icon,
-        'badges': number_of_badges,
-        'rating': rating_value,
-        'rating_count': rating_count,
+        'badges': app_badges_count,
+        'rating': app_rating_value,
+        'rating_count': app_rating_count,
         'updated': app_updated,
         'installs': app_installs,
         'description': app_description,
