@@ -1,87 +1,70 @@
-__author__ = 'Grainier Perera'
+__author__ = 'grainier'
 
-import os
-import contextlib
-from selenium.webdriver import Firefox, FirefoxProfile
-import time
+from pyquery import PyQuery as pq
 import redis
 import pickle
 
+scraped_applications = []
+user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0'
+set_key = 'set_priority_x'
+r_server = redis.Redis("localhost")
+application_keys = r_server.smembers(set_key)
 
-def get_applications_in_page(url):
-    applications = []
-    fp = FirefoxProfile()
-    fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
-    fp.set_preference('permissions.default.image', 2)  # Disable images
-    fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')  # Disable Flash
+for application_key in application_keys:
+    serialized_application_raw_data = r_server.get(application_key)
+    application_raw_data = pickle.loads(serialized_application_raw_data)
 
-    with contextlib.closing(Firefox(firefox_profile=fp)) as driver:
-        driver.get(url)
-        driver.execute_script(
-            "scraperLoadCompleted = false;" +
-            "var interval = null, previousDocHeight = 0;" +
-            "interval = setInterval(function () {" +
-            "if (previousDocHeight < document.body.scrollHeight) {" +
-            "window.scrollTo(0, Math.max(document.documentElement.scrollHeight," +
-            "document.body.scrollHeight, document.documentElement.clientHeight));" +
-            "document.getElementById('show-more-button').click();" +
-            "previousDocHeight = document.body.scrollHeight;" +
-            "} else {" +
-            "clearInterval(interval);" +
-            "scraperLoadCompleted = true;"
-            "}" +
-            "}, 2000);"
-        )
+    application_id = application_raw_data['app_id']
+    application_url = application_raw_data['app_url']
 
-        # Wait for the script to complete
-        done = False
-        while not done:
-            time.sleep(3)
-            done = driver.execute_script(
-                "return scraperLoadCompleted"
-            )
+    application_soup = pq(
+        application_url,
+        headers={'User-Agent': user_agent}
+    )
+
+    body_content = application_soup('#body-content')
+
+    ## application title
+    app_title = body_content('.info-container .document-title').text()
+
+    ## application thumbnail
+    app_thumbnail = body_content('img.cover-image')[0].attrib['src']
+
+    ## number of badges like Top Developer, Editors Choice
+    special_badges = body_content('.header-star-badge .badge')
+    number_of_badges = len(special_badges)
+
+    ## application description
+    description_content = body_content('.description .id-app-orig-desc')
+    app_description = description_content.html()
+
+    ## application rating value && count
+    rating_box = body_content('.rating-box .score-container')
+    rating_meta_data = rating_box('meta')
+    rating_value = 0
+    rating_count = 0
+    for rating_meta in rating_meta_data:
+        if rating_meta.attrib['itemprop'] == 'ratingValue':
+            rating_value = rating_meta.attrib['content']
             pass
-
-        product_matrix = driver.find_elements_by_class_name("card")
-        for application in product_matrix:
-            applications.append(extract_application_data(application))
+        elif rating_meta.attrib['itemprop'] == 'ratingCount':
+            rating_count = rating_meta.attrib['content']
             pass
         pass
-    return applications
-    pass
 
-
-def extract_application_data(application):
-    app_id = application.get_attribute("data-docid")  # ID of the application
-    card_content = application.find_element_by_class_name("card-content")
-    app_url = card_content.find_element_by_xpath("a").get_attribute("href")  # URL of the application
-    price_container = card_content.find_element_by_class_name("price")
-    app_price = price_container.find_element_by_xpath("span").text
-    extracted_data = {
-        'app_id': app_id,
-        'app_url': app_url,
-        'app_price': app_price
+    ## make a application object
+    application = {
+        'title': app_title,
+        'thumbnail': app_thumbnail,
+        'badges': number_of_badges,
+        'rating': rating_value,
+        'rating_count': rating_count,
+        'updated': 'updated',
+        'installs': 'installs',
+        'description': app_description
     }
-    return extracted_data
+
+    scraped_applications.append(application)
     pass
 
-
-def persist_in_redis(applications):
-    r_server = redis.Redis("localhost", "6379")
-    for application in applications:
-        if application['app_price'].lower() != "free":
-            serialized_data = pickle.dumps(application)
-            r_server.set(application['app_id'], serialized_data)
-            pass
-        pass
-    pass
-
-
-def main():
-    # applications = get_applications_in_page("https://play.google.com/store/apps/category/GAME/collection/topselling_paid")
-    applications = get_applications_in_page("https://play.google.com/store/apps/collection/editors_choice")
-    # applications = get_applications_in_page("https://play.google.com/store/apps/category/GAME/collection/topselling_paid")
-    persist_in_redis(applications)
-
-
-main()
+print('done')
