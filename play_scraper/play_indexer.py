@@ -1,3 +1,5 @@
+import workerpool
+
 __author__ = 'Grainier Perera'
 
 import os
@@ -79,11 +81,32 @@ def persist_in_redis(applications):
     pass
 
 
-def main():
-    # applications = get_applications_in_page("https://play.google.com/store/apps/category/GAME/collection/topselling_paid")
-    applications = get_applications_in_page("https://play.google.com/store/apps/collection/editors_choice")
-    # applications = get_applications_in_page("https://play.google.com/store/apps/category/GAME/collection/topselling_paid")
+def process_index_url(url):
+    applications = get_applications_in_page(url)
     persist_in_redis(applications)
+    pass
 
+
+def main():
+    urls = [
+        'https://play.google.com/store/apps/collection/topselling_paid',
+        'https://play.google.com/store/apps/collection/topgrossing',
+        'https://play.google.com/store/apps/collection/topselling_new_paid'
+        'https://play.google.com/store/apps/category/GAME/collection/topgrossing',
+        'https://play.google.com/store/apps/category/GAME/collection/topselling_paid',
+        'https://play.google.com/store/apps/category/GAME/collection/topselling_new_paid'
+        'https://play.google.com/store/apps/collection/editors_choice',
+    ]
+
+    # Make a pool, five threads
+    pool = workerpool.WorkerPool(size=5)
+
+    # Perform the mapping
+    pool.map(process_index_url, urls)
+
+    # Send shutdown jobs to all threads, and wait until all the jobs have been completed
+    pool.shutdown()
+    pool.wait()
+    pass
 
 main()
