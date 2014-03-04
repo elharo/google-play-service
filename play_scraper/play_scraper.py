@@ -1,7 +1,9 @@
-from ApplicationScraper import ApplicationScraper
-import redis
 import pickle
+
+import redis
+
 import workerpool
+import ApplicationScraper
 
 __author__ = 'grainier'
 
