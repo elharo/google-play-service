@@ -1,7 +1,7 @@
 __author__ = 'grainier'
 import os
 import contextlib
-from selenium.webdriver import Firefox, FirefoxProfile
+from selenium.webdriver import Firefox, FirefoxProfile, Chrome, ChromeOptions
 import time
 import redis
 import pickle
@@ -11,6 +11,13 @@ class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url
+        self.fp = FirefoxProfile()
+        self.fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
+        self.fp.set_preference('permissions.default.image', 2)  # Disable images
+        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')  # Disable Flash
+
+        self.co = ChromeOptions()
+        self.co.add_argument("start-maximized")
         pass
 
     def run(self):
@@ -20,12 +27,8 @@ class ApplicationIndexer(object):
 
     def get_applications_in_page(self):
         applications = []
-        fp = FirefoxProfile()
-        fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
-        fp.set_preference('permissions.default.image', 2)  # Disable images
-        fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')  # Disable Flash
-
-        with contextlib.closing(Firefox(firefox_profile=fp)) as driver:
+        # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
+        with contextlib.closing(Chrome()) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
