@@ -1,0 +1,7 @@
+https://play.google.com/store/apps/collection/topselling_paid
+https://play.google.com/store/apps/collection/topgrossing
+https://play.google.com/store/apps/collection/topselling_new_paid
+https://play.google.com/store/apps/category/GAME/collection/topgrossing
+https://play.google.com/store/apps/category/GAME/collection/topselling_paid
+https://play.google.com/store/apps/category/GAME/collection/topselling_new_paid
+https://play.google.com/store/apps/collection/editors_choice

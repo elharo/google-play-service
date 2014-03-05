@@ -1,11 +1,8 @@
-import pickle
-
-import redis
-
-import workerpool
-import ApplicationScraper
-
 __author__ = 'grainier'
+import pickle
+import redis
+from multiprocessing import Pool
+from util.scraper import ApplicationScraper
 
 scraped_applications = []
 set_key = 'set_priority_x'
@@ -28,16 +25,12 @@ def scrape_application(application_id):
 
 
 def main():
-    # Make a pool, five threads
-    pool = workerpool.WorkerPool(size=5)
-
-    # Perform the mapping
-    pool.map(scrape_application, application_keys)
-
-    # Send shutdown jobs to all threads, and wait until all the jobs have been completed
-    pool.shutdown()
-    pool.wait()
+    pool = Pool(processes=4)  # start 4 worker processes
+    pool.map(scrape_application, application_keys)  # Perform the mapping
+    pool.close()
+    pool.join()  # wait for the worker processes to exit
     pass
 
-main()
-print('done')
+if __name__ == '__main__':
+    main()
+    pass

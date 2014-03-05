@@ -1,9 +1,8 @@
 __author__ = 'grainier'
-
 from pyquery import PyQuery as pq
 
 
-class ApplicationScraper:
+class ApplicationScraper(object):
     __user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0'
 
     def __init__(self):

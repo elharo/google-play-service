@@ -1,5 +1,4 @@
 __author__ = 'grainier'
-
 import os
 import contextlib
 from selenium.webdriver import Firefox, FirefoxProfile
@@ -8,7 +7,7 @@ import redis
 import pickle
 
 
-class ApplicationIndexer:
+class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url

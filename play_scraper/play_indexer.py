@@ -1,35 +1,23 @@
-import workerpool
-import ApplicationIndexer
-
 __author__ = 'Grainier Perera'
+from multiprocessing import Pool
+from util.indexer import ApplicationIndexer
 
 
 def process_url(url):
-    indexer = ApplicationIndexer(url)
-    indexer.run()
+    app_indexer = ApplicationIndexer(url)
+    app_indexer.run()
     pass
 
 
 def main():
-    urls = [
-        'https://play.google.com/store/apps/collection/topselling_paid',
-        'https://play.google.com/store/apps/collection/topgrossing',
-        'https://play.google.com/store/apps/collection/topselling_new_paid',
-        'https://play.google.com/store/apps/category/GAME/collection/topgrossing',
-        'https://play.google.com/store/apps/category/GAME/collection/topselling_paid',
-        'https://play.google.com/store/apps/category/GAME/collection/topselling_new_paid',
-        'https://play.google.com/store/apps/collection/editors_choice',
-    ]
-
-    # Make a pool, five threads
-    pool = workerpool.WorkerPool(size=5)
-
-    # Perform the mapping
-    pool.map(process_url, urls)
-
-    # Send shutdown jobs to all threads, and wait until all the jobs have been completed
-    pool.shutdown()
-    pool.wait()
+    urls = [url.strip() for url in open("index_urls.txt").readlines()]  # Build our 'map' parameters
+    pool = Pool(processes=4)  # start 4 worker processes
+    pool.map(process_url, urls)  # Perform the mapping
+    pool.close()
+    pool.join()  # wait for the worker processes to exit
     pass
 
-main()
+
+if __name__ == '__main__':
+    main()
+    pass
