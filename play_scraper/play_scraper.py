@@ -21,6 +21,7 @@ def scrape_application(application_id):
     application = scraper.scrape(app_id, app_url)
 
     r_server.set('full_application_' + app_id, application)
+    scraper = None
     pass
 
 

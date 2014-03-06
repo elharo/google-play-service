@@ -6,6 +6,7 @@ from util.indexer import ApplicationIndexer
 def process_url(url):
     app_indexer = ApplicationIndexer(url)
     app_indexer.run()
+    app_indexer = None
     pass
 
 

@@ -11,13 +11,10 @@ class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url
-        self.fp = FirefoxProfile()
-        self.fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
-        self.fp.set_preference('permissions.default.image', 2)  # Disable images
-        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')  # Disable Flash
-
         self.co = ChromeOptions()
-        self.co.add_argument("start-maximized")
+        self.co.add_experimental_option("prefs", {
+            "profile.managed_default_content_settings.images": 2,
+        })
         pass
 
     def run(self):
@@ -27,8 +24,7 @@ class ApplicationIndexer(object):
 
     def get_applications_in_page(self):
         applications = []
-        # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-        with contextlib.closing(Chrome()) as driver:
+        with contextlib.closing(Chrome(chrome_options=self.co)) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
