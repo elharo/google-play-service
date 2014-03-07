@@ -1,5 +1,5 @@
 #!/bin/sh
-LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml openbox firefox xrdp"
+LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml xorg openbox firefox xrdp"
 LIST_OF_PY_LIBS="redis selenium pyquery"
 
 # Install defined LIST_OF_APPS
