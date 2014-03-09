@@ -11,8 +11,8 @@ def process_url(url):
 
 def main():
     urls = [url.strip() for url in open("index_urls.txt").readlines()]  # Build our 'map' parameters
-    pool = Pool(processes=2)  # start 4 worker processes
-    pool.map(process_url, urls)  # Perform the mapping
+    pool = Pool(processes=2)  # start 2 worker processes
+    pool.map_async(process_url, urls)  # Perform the mapping
     pool.close()
     pool.join()  # wait for the worker processes to exit
     pass

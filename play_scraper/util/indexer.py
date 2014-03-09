@@ -9,6 +9,7 @@ import pickle
 class ApplicationIndexer(object):
 
     def __init__(self, url):
+        # initialize ApplicationIndexer
         self.url = url
         self.fp = FirefoxProfile()
         self.fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
@@ -38,7 +39,7 @@ class ApplicationIndexer(object):
                 "clearInterval(interval);" +
                 "scraperLoadCompleted = true;"
                 "}" +
-                "}, 5000);"
+                "}, 4000);"
             )
 
             # Wait for the script to complete
