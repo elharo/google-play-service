@@ -7,6 +7,7 @@ import pickle
 
 
 class ApplicationIndexer(object):
+    application_index_prefix = 'application_index:'
 
     def __init__(self, url):
         # initialize ApplicationIndexer
@@ -59,6 +60,20 @@ class ApplicationIndexer(object):
         return applications
         pass
 
+    def persist_in_redis(self, applications):
+        r_server = redis.Redis("localhost", "6379")
+        for application in applications:
+            if application['app_price'].lower() != "free":
+                application_key = self.application_index_prefix + application['app_id']
+                serialized_data = pickle.dumps(application)
+                r_server.set(application_key, serialized_data)
+                r_server.srem('not_updated_applications', application_key)
+                ## TODO : Remove below line later
+                r_server.sadd('set_priority_x', application_key)
+                pass
+            pass
+        pass
+
     @staticmethod
     def extract_application_data(application):
         app_id = application.get_attribute("data-docid")  # ID of the application
@@ -73,16 +88,4 @@ class ApplicationIndexer(object):
         }
         return extracted_data
         pass
-
-    @staticmethod
-    def persist_in_redis(applications):
-        r_server = redis.Redis("localhost", "6379")
-        for application in applications:
-            if application['app_price'].lower() != "free":
-                serialized_data = pickle.dumps(application)
-                r_server.set(application['app_id'], serialized_data)
-                ## TODO : Remove below line later
-                r_server.sadd('set_priority_x', application['app_id'])
-                pass
-            pass
-        pass
+    pass
