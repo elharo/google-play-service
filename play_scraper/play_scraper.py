@@ -4,7 +4,6 @@ import redis
 from multiprocessing import Pool
 from util.scraper import ApplicationScraper
 
-scraped_applications = []
 set_key = 'set_priority_x'
 r_server = redis.Redis("localhost")
 application_keys = r_server.smembers(set_key)
@@ -26,7 +25,7 @@ def scrape_application(application_id):
 
 
 def main():
-    pool = Pool(processes=4)  # start 4 worker processes
+    pool = Pool(processes=2)  # start 4 worker processes
     pool.map(scrape_application, application_keys)  # Perform the mapping
     pool.close()
     pool.join()  # wait for the worker processes to exit

@@ -68,8 +68,6 @@ class ApplicationIndexer(object):
                 serialized_data = pickle.dumps(application)
                 r_server.set(application_key, serialized_data)
                 r_server.srem('not_updated_applications', application_key)
-                ## TODO : Remove below line later
-                r_server.sadd('set_priority_x', application_key)
                 pass
             pass
         pass
