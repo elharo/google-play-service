@@ -17,26 +17,13 @@ class ApplicationScraper(object):
             headers={'User-Agent': self.__user_agent}
         )('#body-content')
 
-        ## application title
-        app_title = self.__get_app_title(body_content)
-
-        ## application thumbnail
-        app_icon = self.__get_app_icon(body_content)
-
-        ## application price
-        app_price = self.__get_app_price(body_content)
-
-        ## number of badges like Top Developer, Editors Choice
-        app_badges_count = self.__get_number_of_badges(body_content)
-
-        ## application description
-        app_description = self.__get_app_description(body_content)
-
-        ## application screen shots
-        app_thumbnails = self.__get_app_thumbnails(body_content)
-
-        ## application's additional information
-        application_meta = self.__get_additional_information(body_content)
+        app_title = self.__get_app_title(body_content)                      # application title
+        app_icon = self.__get_app_icon(body_content)                        # application thumbnail
+        app_price = self.__get_app_price(body_content)                      # application price
+        app_badges_count = self.__get_number_of_badges(body_content)        # number of badges like Top Developer
+        app_description = self.__get_app_description(body_content)          # application description
+        app_thumbnails = self.__get_app_thumbnails(body_content)            # application screen shots
+        application_meta = self.__get_additional_information(body_content)  # application's additional information
         app_updated = application_meta['datePublished']
         app_installs = application_meta['numDownloads']
         app_size = application_meta['fileSize']

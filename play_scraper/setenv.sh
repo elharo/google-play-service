@@ -26,5 +26,10 @@ sudo update-rc.d "redis_${redisPort}" defaults
 # Install python libs
 sudo pip install ${LIST_OF_PY_LIBS}
 
+# Install selenium server
+cd ~/
+sudo mkdir selenium_server && cd selenium_server
+wget http://selenium-release.storage.googleapis.com/2.40/selenium-server-standalone-2.40.0.jar
+
 # Env setup completed
 echo "Env setup completed"

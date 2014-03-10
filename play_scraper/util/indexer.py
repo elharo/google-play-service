@@ -1,32 +1,35 @@
-from properties import google_prop
+from selenium import webdriver
+
+# TODO : read more on htmlunit
+# http://docs.seleniumhq.org/docs/03_webdriver.jsp
+# http://dionysus.uraganov.net/software/how-to-install-selenium-server-with-firefox-on-ubuntu-11-10/
+# http://ubuntuforums.org/showthread.php?t=1894595
 
 __author__ = 'grainier'
 import contextlib
-from selenium.webdriver import Firefox, FirefoxProfile
+from selenium.webdriver import Firefox, FirefoxProfile, Remote
 import time
-import redis
-import pickle
 
 
 class ApplicationIndexer(object):
 
     def __init__(self, url):
-        # initialize ApplicationIndexer
         self.url = url
         self.fp = FirefoxProfile()
-        self.fp.set_preference('permissions.default.stylesheet', 2)  # Disable css
-        self.fp.set_preference('permissions.default.image', 2)  # Disable images
-        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')  # Disable Flash
+        self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
+        self.fp.set_preference('permissions.default.image', 2)                          # Disable images
+        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
         pass
 
-    def run(self):
+    def get_scraped_apps(self):
         applications = self.get_applications_in_page()
-        self.persist_in_redis(applications)
+        return applications
         pass
 
     def get_applications_in_page(self):
         applications = []
-        with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
+        # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
+        with contextlib.closing(Remote("http://localhost:4444/wd/hub", webdriver.DesiredCapabilities.HTMLUNITWITHJS)) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
@@ -44,9 +47,9 @@ class ApplicationIndexer(object):
                 "}, 4000);"
             )
 
-            # Wait for the script to complete
             done = False
             while not done:
+                # Wait for the script to complete
                 time.sleep(2)
                 done = driver.execute_script(
                     "return scraperLoadCompleted"
@@ -61,23 +64,11 @@ class ApplicationIndexer(object):
         return applications
         pass
 
-    def persist_in_redis(self, applications):
-        r_server = redis.Redis(google_prop.redis_host, google_prop.redis_port)
-        for application in applications:
-            if application['app_price'].lower() != "free":
-                application_key = google_prop.application_index_prefix + application['app_id']
-                serialized_data = pickle.dumps(application)
-                r_server.set(application_key, serialized_data)
-                r_server.srem(google_prop.not_updated_set_key, application_key)
-                pass
-            pass
-        pass
-
     @staticmethod
     def extract_application_data(application):
-        app_id = application.get_attribute("data-docid")  # ID of the application
+        app_id = application.get_attribute("data-docid")                            # ID of the application
         card_content = application.find_element_by_class_name("card-content")
-        app_url = card_content.find_element_by_xpath("a").get_attribute("href")  # URL of the application
+        app_url = card_content.find_element_by_xpath("a").get_attribute("href")     # URL of the application
         price_container = card_content.find_element_by_class_name("price")
         app_price = price_container.find_element_by_xpath("span").text
         extracted_data = {
