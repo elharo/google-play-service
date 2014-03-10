@@ -1,13 +1,14 @@
+from properties import google_prop
+
 __author__ = 'grainier'
 import contextlib
-from selenium.webdriver import Firefox, FirefoxProfile, Chrome, ChromeOptions
+from selenium.webdriver import Firefox, FirefoxProfile
 import time
 import redis
 import pickle
 
 
 class ApplicationIndexer(object):
-    application_index_prefix = 'application_index:'
 
     def __init__(self, url):
         # initialize ApplicationIndexer
@@ -61,13 +62,13 @@ class ApplicationIndexer(object):
         pass
 
     def persist_in_redis(self, applications):
-        r_server = redis.Redis("localhost", "6379")
+        r_server = redis.Redis(google_prop.redis_host, google_prop.redis_port)
         for application in applications:
             if application['app_price'].lower() != "free":
-                application_key = self.application_index_prefix + application['app_id']
+                application_key = google_prop.application_index_prefix + application['app_id']
                 serialized_data = pickle.dumps(application)
                 r_server.set(application_key, serialized_data)
-                r_server.srem('not_updated_applications', application_key)
+                r_server.srem(google_prop.not_updated_set_key, application_key)
                 pass
             pass
         pass
