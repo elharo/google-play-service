@@ -29,7 +29,7 @@ class ApplicationIndexer(object):
     def get_applications_in_page(self):
         applications = []
         # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-        with contextlib.closing(webdriver.Remote("http://localhost:4444/wd/hub", webdriver.DesiredCapabilities.FIREFOX)) as driver:
+        with contextlib.closing(webdriver.Remote("http://localhost:4444/wd/hub", webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
