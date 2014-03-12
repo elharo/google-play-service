@@ -3,7 +3,7 @@
 SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
 
 # list of apt-get applications to install
-LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml openjdk-7-jdk"
+LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml openjdk-7-jdk screen"
 
 # list of python pip libraries to install
 LIST_OF_PY_LIBS="redis selenium pyquery"

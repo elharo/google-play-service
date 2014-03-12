@@ -25,9 +25,18 @@ class ApplicationIndexer(object):
         pass
 
     def get_applications_in_page(self):
+        from selenium import webdriver
+        driver = webdriver.PhantomJS()
+        driver.get("http://duckduckgo.com/")
+        driver.find_element_by_id('search_form_input_homepage').send_keys("realpython")
+        driver.find_element_by_id("search_button_homepage").click()
+        print driver.current_url
+        driver.quit
+
         applications = []
         # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-        with contextlib.closing(webdriver.Remote(("http://%s:%s/wd/hub" % (self.selenium_host, self.selenium_port)), webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
+        with contextlib.closing(webdriver.PhantomJS()) as driver:
+        # with contextlib.closing(webdriver.Remote(("http://%s:%s/wd/hub" % (self.selenium_host, self.selenium_port)), webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
