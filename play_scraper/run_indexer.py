@@ -6,6 +6,8 @@ from multiprocessing import Pool
 from util.indexer import ApplicationIndexer
 from util.scraper import ApplicationScraper
 
+# http://stackoverflow.com/questions/20309170/selenium-and-phantomjs-error-cannot-connect-to-ghostdriver
+
 
 def process_url(url):
     app_indexer = ApplicationIndexer(url)
