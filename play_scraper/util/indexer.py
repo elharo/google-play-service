@@ -1,9 +1,7 @@
 __author__ = 'grainier'
-from selenium import webdriver
 import contextlib
-from selenium.webdriver import Firefox, FirefoxProfile, Remote
+from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS
 import time
-from properties import google_prop
 
 
 # TODO : Firefox Driver should only be used in testing
@@ -11,8 +9,6 @@ class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url
-        self.selenium_host = google_prop.selenium_host
-        self.selenium_port = google_prop.selenium_port
         self.fp = FirefoxProfile()
         self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         self.fp.set_preference('permissions.default.image', 2)                          # Disable images
@@ -26,40 +22,42 @@ class ApplicationIndexer(object):
 
     def get_applications_in_page(self):
         applications = []
-        # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-        with contextlib.closing(webdriver.PhantomJS()) as driver:
-        # with contextlib.closing(webdriver.Remote(("http://%s:%s/wd/hub" % (self.selenium_host, self.selenium_port)), webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
-            driver.get(self.url)
-            driver.execute_script(
-                "scraperLoadCompleted = false;" +
-                "var interval = null, previousDocHeight = 0;" +
-                "interval = setInterval(function () {" +
-                "if (previousDocHeight < document.body.scrollHeight) {" +
-                "window.scrollTo(0, Math.max(document.documentElement.scrollHeight," +
-                "document.body.scrollHeight, document.documentElement.clientHeight));" +
-                "document.getElementById('show-more-button').click();" +
-                "previousDocHeight = document.body.scrollHeight;" +
-                "} else {" +
-                "clearInterval(interval);" +
-                "scraperLoadCompleted = true;"
-                "}" +
-                "}, 4000);"
-            )
-
-            done = False
-            while not done:
-                # Wait for the script to complete
-                time.sleep(1)
-                done = driver.execute_script(
-                    "return scraperLoadCompleted"
+        try:
+            # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
+            with contextlib.closing(PhantomJS(service_args=['--load-images=no'])) as driver:
+                driver.get(self.url)
+                driver.execute_script(
+                    "scraperLoadCompleted = false;" +
+                    "var interval = null, previousDocHeight = 0;" +
+                    "interval = setInterval(function () {" +
+                    "if (previousDocHeight < document.body.scrollHeight) {" +
+                    "window.scrollTo(0, Math.max(document.documentElement.scrollHeight," +
+                    "document.body.scrollHeight, document.documentElement.clientHeight));" +
+                    "document.getElementById('show-more-button').click();" +
+                    "previousDocHeight = document.body.scrollHeight;" +
+                    "} else {" +
+                    "clearInterval(interval);" +
+                    "scraperLoadCompleted = true;"
+                    "}" +
+                    "}, 4000);"
                 )
-                pass
 
-            product_matrix = driver.find_elements_by_class_name("card")
-            for application in product_matrix:
-                applications.append(self.extract_application_data(application))
+                done = False
+                while not done:
+                    # Wait for the script to complete
+                    time.sleep(2)
+                    done = driver.execute_script(
+                        "return scraperLoadCompleted"
+                    )
+                    pass
+
+                product_matrix = driver.find_elements_by_class_name("card")
+                for application in product_matrix:
+                    applications.append(self.extract_application_data(application))
+                    pass
                 pass
-            pass
+        except Exception as e:
+            print(e)
         return applications
         pass
 
