@@ -1,20 +1,18 @@
-from selenium import webdriver
-
-# TODO : read more on htmlunit
-# http://docs.seleniumhq.org/docs/03_webdriver.jsp
-# http://dionysus.uraganov.net/software/how-to-install-selenium-server-with-firefox-on-ubuntu-11-10/
-# http://ubuntuforums.org/showthread.php?t=1894595
-
 __author__ = 'grainier'
+from selenium import webdriver
 import contextlib
 from selenium.webdriver import Firefox, FirefoxProfile, Remote
 import time
+from properties import google_prop
 
 
+# TODO : Firefox Driver should only be used in testing
 class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url
+        self.selenium_host = google_prop.selenium_host
+        self.selenium_port = google_prop.selenium_port
         self.fp = FirefoxProfile()
         self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         self.fp.set_preference('permissions.default.image', 2)                          # Disable images
@@ -29,7 +27,7 @@ class ApplicationIndexer(object):
     def get_applications_in_page(self):
         applications = []
         # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-        with contextlib.closing(webdriver.Remote("http://localhost:4444/wd/hub", webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
+        with contextlib.closing(webdriver.Remote(("http://%s:%s/wd/hub" % (self.selenium_host, self.selenium_port)), webdriver.DesiredCapabilities.PHANTOMJS)) as driver:
             driver.get(self.url)
             driver.execute_script(
                 "scraperLoadCompleted = false;" +
@@ -50,7 +48,7 @@ class ApplicationIndexer(object):
             done = False
             while not done:
                 # Wait for the script to complete
-                time.sleep(2)
+                time.sleep(1)
                 done = driver.execute_script(
                     "return scraperLoadCompleted"
                 )

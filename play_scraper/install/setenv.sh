@@ -1,12 +1,18 @@
 #!/bin/sh
+# get this script's location
+SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
+
+# list of apt-get applications to install
 LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml openjdk-7-jdk"
+
+# list of python pip libraries to install
 LIST_OF_PY_LIBS="redis selenium pyquery"
 
 # Install defined LIST_OF_APPS
 sudo apt-get update
 sudo apt-get install -y ${LIST_OF_APPS}
 
-# Install redis
+# Install Redis (from source)
 cd ~/
 wget http://download.redis.io/releases/redis-2.8.3.tar.gz
 tar -xvzf redis-2.8.3.tar.gz
@@ -19,8 +25,6 @@ cd utils
 sudo ./install_server.sh
 echo -n "Please enter the desired port for redis [default = 6379]: ";
 read redisPort;
-
-# updare demon according to the above details
 sudo update-rc.d "redis_${redisPort}" defaults
 
 # Install python libs
@@ -28,8 +32,16 @@ sudo pip install ${LIST_OF_PY_LIBS}
 
 # Install selenium server
 cd ~/
-sudo mkdir selenium_server && cd selenium_server
-wget http://selenium-release.storage.googleapis.com/2.40/selenium-server-standalone-2.40.0.jar
+mkdir /usr/lib/selenium/
+cd /usr/lib/selenium/
+sudo wget http://selenium-release.storage.googleapis.com/2.40/selenium-server-standalone-2.40.0.jar
+mkdir -p /var/log/selenium/
+chmod a+w /var/log/selenium/
+cd ${SCRIPTPATH}
+sudo cp selenium /etc/init.d/
+chmod 755 /etc/init.d/selenium
+sudo /etc/init.d/selenium start
+sudo update-rc.d selenium defaults
 
 # Install Phantom JS
 cd /usr/local/share/
@@ -43,4 +55,4 @@ which phantomjs
 cd ~/
 
 # Env setup completed
-echo "Env setup completed"
+echo "***** environment setup for indexer engine completed *****"
