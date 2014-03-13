@@ -39,7 +39,6 @@ def scrape_application(application_id):
 
     r_server.set(application_key, application)
     r_server.srem(google_prop.not_updated_set_key, application_key)
-    # r_server.shutdown()
     pass
 
 
@@ -66,7 +65,6 @@ def main():
     pool.join()                                                         # wait for the worker processes to exit
 
     r_server.save()                                                     # persist the dump
-    # r_server.shutdown()                                               # shutdown redis server
     pass
 
 

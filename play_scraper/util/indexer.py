@@ -1,3 +1,5 @@
+from encodings.punycode import selective_find
+
 __author__ = 'grainier'
 import contextlib
 from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS
@@ -9,6 +11,8 @@ class ApplicationIndexer(object):
 
     def __init__(self, url):
         self.url = url
+        self.attempt = 0
+        self.retries = 5
         self.fp = FirefoxProfile()
         self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         self.fp.set_preference('permissions.default.image', 2)                          # Disable images
@@ -57,7 +61,13 @@ class ApplicationIndexer(object):
                     pass
                 pass
         except Exception as e:
-            print(e)
+            if self.attempt < self.retries:
+                self.attempt += 1
+                time.sleep(5)
+                applications = self.get_applications_in_page()
+            else:
+                print 'retry : url [ ' + self.url + ' ] + | attempt [ ' + str(self.attempt) + ' ]'
+            print('fail : url [ ' + self.url + ' ] | error [ ' + e + ' ]')
         return applications
         pass
 
