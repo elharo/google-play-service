@@ -1,12 +1,8 @@
-from encodings.punycode import selective_find
-
 __author__ = 'grainier'
-import contextlib
 from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS
 import time
 
 
-# TODO : Firefox Driver should only be used in testing
 class ApplicationIndexer(object):
 
     def __init__(self, url):
@@ -26,48 +22,43 @@ class ApplicationIndexer(object):
 
     def get_applications_in_page(self):
         applications = []
+        driver = None
         try:
-            # with contextlib.closing(Firefox(firefox_profile=self.fp)) as driver:
-            with contextlib.closing(PhantomJS(service_args=['--load-images=no'])) as driver:
-                driver.get(self.url)
-                driver.execute_script(
-                    "scraperLoadCompleted = false;" +
-                    "var interval = null, previousDocHeight = 0;" +
-                    "interval = setInterval(function () {" +
-                    "if (previousDocHeight < document.body.scrollHeight) {" +
-                    "window.scrollTo(0, Math.max(document.documentElement.scrollHeight," +
-                    "document.body.scrollHeight, document.documentElement.clientHeight));" +
-                    "document.getElementById('show-more-button').click();" +
-                    "previousDocHeight = document.body.scrollHeight;" +
-                    "} else {" +
-                    "clearInterval(interval);" +
-                    "scraperLoadCompleted = true;"
-                    "}" +
-                    "}, 4000);"
-                )
+            scroll_script = open("util/js_scripts/scroll_page.js").read()
+            driver = PhantomJS(service_args=['--load-images=no'])
+            # driver = Firefox(firefox_profile=self.fp)                                 # TODO : used in testing
+            driver.get(self.url)
+            driver.execute_script(scroll_script)
 
-                done = False
-                while not done:
-                    # Wait for the script to complete
-                    time.sleep(2)
-                    done = driver.execute_script(
-                        "return scraperLoadCompleted"
-                    )
-                    pass
+            done = False
+            while not done:
+                time.sleep(5)                                                           # Wait for the script
+                done = driver.execute_script("return window.scraperLoadCompleted")
+                pass
 
-                product_matrix = driver.find_elements_by_class_name("card")
-                for application in product_matrix:
-                    applications.append(self.extract_application_data(application))
+            product_matrix = driver.find_elements_by_class_name("card")
+            for application in product_matrix:
+                extracted_application = self.extract_application_data(application)
+                if extracted_application['app_price'].lower() != "free":
+                    applications.append(extracted_application)
                     pass
                 pass
+            pass
         except Exception as e:
+            if driver is not None:
+                driver.quit()
+                pass
+
             if self.attempt < self.retries:
                 self.attempt += 1
-                time.sleep(5)
-                applications = self.get_applications_in_page()
-            else:
+                time.sleep(10)
                 print 'retry : url [ ' + self.url + ' ] + | attempt [ ' + str(self.attempt) + ' ]'
-            print('fail : url [ ' + self.url + ' ] | error [ ' + e + ' ]')
+                applications = self.get_applications_in_page()
+                pass
+            else:
+                print('fail : url [ ' + self.url + ' ] | error [ ' + str(e) + ' ]')
+                pass
+            pass
         return applications
         pass
 
