@@ -9,10 +9,11 @@ class ApplicationIndexer(object):
         self.url = url
         self.attempt = 0
         self.retries = 5
-        self.fp = FirefoxProfile()
-        self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
-        self.fp.set_preference('permissions.default.image', 2)                          # Disable images
-        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
+        self.acknowledgements = 2
+        # self.fp = FirefoxProfile()
+        # self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
+        # self.fp.set_preference('permissions.default.image', 2)                          # Disable images
+        # self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
         pass
 
     def get_scraped_apps(self):
@@ -30,10 +31,19 @@ class ApplicationIndexer(object):
             driver.get(self.url)
             driver.execute_script(scroll_script)
 
+            acknowledge = 0
             done = False
             while not done:
                 time.sleep(5)                                                           # Wait for the script
-                done = driver.execute_script("return window.scraperLoadCompleted")
+                scroll_finished = driver.execute_script("return window.scraperLoadCompleted")
+                if scroll_finished:
+                    if acknowledge == self.acknowledgements:
+                        done = driver.execute_script("return window.scraperLoadCompleted")
+                        pass
+                    else:
+                        acknowledge += 1
+                        pass
+                    pass
                 pass
 
             product_matrix = driver.find_elements_by_class_name("card")
