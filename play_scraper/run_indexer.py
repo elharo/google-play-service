@@ -28,17 +28,17 @@ def process_url(url):
                 existing_price_data = existing_application['price_data']
                 existing_price_data[str(current_time_millisecond())] = application['app_price']
                 application['price_data'] = existing_price_data
+                r_server.srem(google_prop.author_urls_set_key, url)                                 # Remove author
                 pass
             else:
+                r_server.sadd(google_prop.author_urls_set_key, application['author_url'])           # Add author
                 price_data = {str(current_time_millisecond()): application['app_price']}
                 application['price_data'] = price_data
                 pass
-
             serialized_data = pickle.dumps(application)
             r_server.set(application_key, serialized_data)
             r_server.srem(google_prop.not_updated_set_key, application_key)
             pass
-        r_server.sadd(google_prop.author_urls_set_key, application['author_url'])
         pass
     pass
 
