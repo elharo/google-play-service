@@ -1,9 +1,9 @@
-import logging
-import time
-
 __author__ = 'Grainier Perera'
+import time
+import logging
 import pickle
 import redis
+from util.current_time import current_time_millisecond
 from properties import google_prop
 from multiprocessing import Pool
 from util.indexer import ApplicationIndexer
@@ -20,6 +20,19 @@ def process_url(url):
     r_server = redis.Redis(google_prop.redis_host, google_prop.redis_port)
     for application in applications:
         application_key = google_prop.application_index_prefix + application['app_id']
+        serialized_existing_application = r_server.get(application_key)
+
+        if serialized_existing_application is not None:
+            existing_application = pickle.loads(serialized_existing_application)
+            existing_price_data = existing_application['price_data']
+            existing_price_data[str(current_time_millisecond())] = application['app_price']
+            application['price_data'] = existing_price_data
+            pass
+        else:
+            price_data = {str(current_time_millisecond()): application['app_price']}
+            application['price_data'] = price_data
+            pass
+
         serialized_data = pickle.dumps(application)
         r_server.set(application_key, serialized_data)
         r_server.srem(google_prop.not_updated_set_key, application_key)
