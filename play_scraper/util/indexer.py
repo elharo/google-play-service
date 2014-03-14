@@ -49,9 +49,9 @@ class ApplicationIndexer(object):
             product_matrix = driver.find_elements_by_class_name("card")
             for application in product_matrix:
                 extracted_application = self.extract_application_data(application)
-                if extracted_application['app_price'].lower() != "free":
-                    applications.append(extracted_application)
-                    pass
+                # if extracted_application['app_price'] != -1:
+                applications.append(extracted_application)
+                #pass
                 pass
             pass
         except Exception as e:
@@ -77,12 +77,31 @@ class ApplicationIndexer(object):
         app_id = application.get_attribute("data-docid")                            # ID of the application
         card_content = application.find_element_by_class_name("card-content")
         app_url = card_content.find_element_by_xpath("a").get_attribute("href")     # URL of the application
-        price_container = card_content.find_element_by_class_name("price")
-        app_price = price_container.find_element_by_xpath("span").text
+        price_containers = card_content.find_elements_by_class_name('buy')
+        author_url = application.find_element_by_class_name("subtitle").get_attribute("href")
+        app_price = 0.0
+
+        for price_container in price_containers:
+            if '$' in price_container.text.lower():
+                try:
+                    app_price_string = price_container.text.replace('$', '')
+                    app_price = float(app_price_string)
+                    break
+                    pass
+                except Exception:
+                    pass
+                pass
+            elif 'free' in price_container.text.lower():
+                app_price = -1
+                break
+                pass
+            pass
+
         extracted_data = {
             'app_id': app_id,
             'app_url': app_url,
-            'app_price': app_price
+            'app_price': app_price,
+            'author_url': author_url
         }
         return extracted_data
         pass
