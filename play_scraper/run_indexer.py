@@ -19,10 +19,13 @@ def process_url(url):
 
     r_server = redis.Redis(google_prop.redis_host, google_prop.redis_port)
     for application in applications:
-        application_key = google_prop.application_index_prefix + application['app_id']
-        serialized_data = pickle.dumps(application)
-        r_server.set(application_key, serialized_data)
-        r_server.srem(google_prop.not_updated_set_key, application_key)
+        if application['app_price'] != -1:
+            application_key = google_prop.application_index_prefix + application['app_id']
+            serialized_data = pickle.dumps(application)
+            r_server.set(application_key, serialized_data)
+            r_server.srem(google_prop.not_updated_set_key, application_key)
+            pass
+        r_server.sadd(google_prop.author_urls_set_key, application['author_url'])
         pass
     pass
 
@@ -53,20 +56,28 @@ def main():
         pass
 
     """ Process the urls list """
-    urls = [url.strip() for url in open("index_urls.txt").readlines()]  # Build our 'map' parameters
-    pool_indexers = Pool(processes=google_prop.parallel_processes)      # start 2 worker processes
-    pool_indexers.map(process_url, urls)                                # Perform the mapping
+    urls = [url.strip() for url in open("index_urls.txt").readlines()]      # Build our 'map' parameters
+    pool_indexers = Pool(processes=google_prop.parallel_processes)          # start 2 worker processes
+    pool_indexers.map(process_url, urls)                                    # Perform the mapping
     pool_indexers.close()
-    pool_indexers.join()                                                # wait for the worker processes to exit
+    pool_indexers.join()                                                    # wait for the worker processes to exit
+
+    """ Process the urls list of authors"""
+    author_urls = [author_url.strip() for author_url in r_server.smembers(google_prop.author_urls_set_key)]
+    pool_author_indexers = Pool(processes=google_prop.parallel_processes)   # start 2 worker processes
+    pool_author_indexers.map(process_url, author_urls)                      # Perform the mapping
+    pool_author_indexers.close()
+    pool_author_indexers.join()                                             # wait for the worker processes to exit
 
     """ Get details of the application keys in the not_updated_applications SET """
     application_keys = r_server.smembers(google_prop.not_updated_set_key)
-    pool_scrapers = Pool(processes=google_prop.parallel_processes)      # start 4 worker processes
-    pool_scrapers.map(scrape_application, application_keys)             # Perform the mapping
+    pool_scrapers = Pool(processes=google_prop.parallel_processes)          # start 4 worker processes
+    pool_scrapers.map(scrape_application, application_keys)                 # Perform the mapping
     pool_scrapers.close()
-    pool_scrapers.join()                                                # wait for the worker processes to exit
+    pool_scrapers.join()                                                    # wait for the worker processes to exit
 
-    r_server.save()                                                     # persist the dump
+    ''' Persist the redis db to the persistence storage'''
+    r_server.save()                                                         # persist the dump
     pass
 
 
@@ -80,5 +91,4 @@ if __name__ == '__main__':
     logging.info('start : ' + time.strftime("%Y:%m:%d:_%H:%M"))
     main()
     logging.info('finish : ' + time.strftime("%Y:%m:%d:_%H:%M"))
-
     pass
