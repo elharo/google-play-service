@@ -5,27 +5,26 @@ import time
 
 class ApplicationIndexer(object):
 
-    def __init__(self, url):
+    def __init__(self, url, retries, acknowledgements):
         self.url = url
         self.attempt = 0
-        self.retries = 5
-        self.acknowledgements = 2
+        self.retries = retries
+        self.acknowledgements = acknowledgements
         # self.fp = FirefoxProfile()
         # self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         # self.fp.set_preference('permissions.default.image', 2)                          # Disable images
         # self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
         pass
 
-    def get_scraped_apps(self):
-        applications = self.get_applications_in_page()
+    def get_scraped_apps(self, scroll_script):
+        applications = self.get_applications_in_page(scroll_script)
         return applications
         pass
 
-    def get_applications_in_page(self):
+    def get_applications_in_page(self, scroll_script):
         applications = []
         driver = None
         try:
-            scroll_script = open("util/js_scripts/scroll_page.js").read()
             driver = PhantomJS(service_args=['--load-images=no'])
             # driver = Firefox(firefox_profile=self.fp)                                 # TODO : used in testing
             driver.get(self.url)

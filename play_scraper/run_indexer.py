@@ -10,9 +10,9 @@ from util.indexer import ApplicationIndexer
 from util.scraper import ApplicationScraper
 
 
-def process_url(url):
-    app_indexer = ApplicationIndexer(url)
-    applications = app_indexer.get_scraped_apps()
+def process_url(url, scroll_script, retries, acknowledgements, collect_author=True):
+    app_indexer = ApplicationIndexer(url, retries, acknowledgements)
+    applications = app_indexer.get_scraped_apps(scroll_script)
 
     applications_count = len(applications)
     logging.info('URL [ ' + url + ' ] + | applications [ ' + str(applications_count) + ' ]')
@@ -28,18 +28,36 @@ def process_url(url):
                 existing_price_data = existing_application['price_data']
                 existing_price_data[str(current_time_millisecond())] = application['app_price']
                 application['price_data'] = existing_price_data
-                r_server.srem(google_prop.author_urls_set_key, url)                                 # Remove author
+                r_server.srem(google_prop.author_urls_set_key, url)  # Remove author
                 pass
             else:
-                r_server.sadd(google_prop.author_urls_set_key, application['author_url'])           # Add author
                 price_data = {str(current_time_millisecond()): application['app_price']}
                 application['price_data'] = price_data
+                if collect_author:
+                    r_server.sadd(google_prop.author_urls_set_key, application['author_url'])  # Add author
+                    pass
                 pass
             serialized_data = pickle.dumps(application)
             r_server.set(application_key, serialized_data)
             r_server.srem(google_prop.not_updated_set_key, application_key)
             pass
         pass
+    pass
+
+
+def process_author_url(url):
+    retries = 2
+    acknowledgements = 0
+    scroll_script = open("util/js_scripts/author_scroll_page.js").read()
+    process_url(url, scroll_script, retries, acknowledgements, collect_author=False)
+    pass
+
+
+def process_catalog_url(url):
+    retries = 5
+    acknowledgements = 2
+    scroll_script = open("util/js_scripts/catalog_scroll_page.js").read()
+    process_url(url, scroll_script, retries, acknowledgements)
     pass
 
 
@@ -69,28 +87,28 @@ def main():
         pass
 
     """ Process the urls list """
-    urls = [url.strip() for url in open("index_urls.txt").readlines()]      # Build our 'map' parameters
-    pool_indexers = Pool(processes=google_prop.parallel_processes)          # start 2 worker processes
-    pool_indexers.map(process_url, urls)                                    # Perform the mapping
+    urls = [url.strip() for url in open("index_urls.txt").readlines()]  # Build our 'map' parameters
+    pool_indexers = Pool(processes=google_prop.parallel_processes)  # start 2 worker processes
+    pool_indexers.map(process_catalog_url, urls)  # Perform the mapping
     pool_indexers.close()
-    pool_indexers.join()                                                    # wait for the worker processes to exit
+    pool_indexers.join()  # wait for the worker processes to exit
 
     """ Process the urls list of authors"""
     author_urls = [author_url.strip() for author_url in r_server.smembers(google_prop.author_urls_set_key)]
-    pool_author_indexers = Pool(processes=google_prop.parallel_processes)   # start 2 worker processes
-    pool_author_indexers.map(process_url, author_urls)                      # Perform the mapping
+    pool_author_indexers = Pool(processes=google_prop.parallel_processes)  # start 2 worker processes
+    pool_author_indexers.map(process_author_url, author_urls)  # Perform the mapping
     pool_author_indexers.close()
-    pool_author_indexers.join()                                             # wait for the worker processes to exit
+    pool_author_indexers.join()  # wait for the worker processes to exit
 
     """ Get details of the application keys in the not_updated_applications SET """
     application_keys = r_server.smembers(google_prop.not_updated_set_key)
-    pool_scrapers = Pool(processes=google_prop.parallel_processes)          # start 4 worker processes
-    pool_scrapers.map(scrape_application, application_keys)                 # Perform the mapping
+    pool_scrapers = Pool(processes=google_prop.parallel_processes)  # start 4 worker processes
+    pool_scrapers.map(scrape_application, application_keys)  # Perform the mapping
     pool_scrapers.close()
-    pool_scrapers.join()                                                    # wait for the worker processes to exit
+    pool_scrapers.join()  # wait for the worker processes to exit
 
     ''' Persist the redis db to the persistence storage'''
-    r_server.save()                                                         # persist the dump
+    r_server.save()  # persist the dump
     pass
 
 
