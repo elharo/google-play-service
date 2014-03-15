@@ -22,13 +22,24 @@ def process_url(url, scroll_script, retries, acknowledgements, collect_author=Tr
         if application['app_price'] != -1:
             application_key = google_prop.application_index_prefix + application['app_id']
             serialized_existing_application = r_server.get(application_key)
-
             if serialized_existing_application is not None:
                 existing_application = pickle.loads(serialized_existing_application)
                 existing_price_data = existing_application['price_data']
                 existing_price_data[str(current_time_millisecond())] = application['app_price']
                 application['price_data'] = existing_price_data
-                r_server.srem(google_prop.author_urls_set_key, url)  # Remove author
+                # r_server.srem(google_prop.author_urls_set_key, url)  # Remove author
+
+                existing_price = existing_application['app_price']
+                new_price = application['app_price']
+                # TODO: Notification should happen down here
+                if new_price < existing_price:
+                    r_server.sadd(google_prop.price_decreased_applications_set_key, application_key)
+                    r_server.srem(google_prop.price_increased_applications_set_key, application_key)
+                    pass
+                elif new_price > existing_price:
+                    r_server.sadd(google_prop.price_increased_applications_set_key, application_key)
+                    r_server.srem(google_prop.price_decreased_applications_set_key, application_key)
+                    pass
                 pass
             else:
                 price_data = {str(current_time_millisecond()): application['app_price']}
@@ -46,7 +57,7 @@ def process_url(url, scroll_script, retries, acknowledgements, collect_author=Tr
 
 
 def process_author_url(url):
-    retries = 2
+    retries = 1
     acknowledgements = 0
     scroll_script = open("util/js_scripts/author_scroll_page.js").read()
     process_url(url, scroll_script, retries, acknowledgements, collect_author=False)

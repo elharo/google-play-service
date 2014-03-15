@@ -33,7 +33,6 @@ class ApplicationIndexer(object):
             acknowledge = 0
             done = False
             while not done:
-                time.sleep(5)                                                           # Wait for the script
                 scroll_finished = driver.execute_script("return window.scraperLoadCompleted")
                 if scroll_finished:
                     if acknowledge == self.acknowledgements:
@@ -43,6 +42,10 @@ class ApplicationIndexer(object):
                         acknowledge += 1
                         pass
                     pass
+                else:
+                    acknowledge = 0
+                    pass
+                time.sleep(5)  # Wait before retry
                 pass
 
             product_matrix = driver.find_elements_by_class_name("card")
@@ -62,7 +65,7 @@ class ApplicationIndexer(object):
                 self.attempt += 1
                 time.sleep(10)
                 print 'retry : url [ ' + self.url + ' ] + | attempt [ ' + str(self.attempt) + ' ]'
-                applications = self.get_applications_in_page()
+                applications = self.get_applications_in_page(scroll_script)
                 pass
             else:
                 print('fail : url [ ' + self.url + ' ] | error [ ' + str(e) + ' ]')
