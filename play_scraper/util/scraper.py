@@ -70,12 +70,18 @@ class ApplicationScraper(object):
 
     @staticmethod
     def __get_app_price(content):
-        price = ''
+        price = 0.0
         button_buy = content('button.price.buy')
         price_meta_data = button_buy('meta')
         for price_meta in price_meta_data:
             if price_meta.attrib['itemprop'] == 'price':
-                price = price_meta.attrib['content']
+                price_string = price_meta.attrib['content']
+                try:
+                    price_string = price_string.replace('$', '')
+                    price = float(price_string)
+                    pass
+                except Exception:
+                    pass
                 pass
             pass
         return price

@@ -10,7 +10,7 @@ from util.indexer import ApplicationIndexer
 from util.scraper import ApplicationScraper
 
 
-def process_url(url, scroll_script, retries, acknowledgements, collect_author=True):
+def process_url(url, scroll_script, retries, acknowledgements, collect_author=False):
     app_indexer = ApplicationIndexer(url, retries, acknowledgements)
     applications = app_indexer.get_scraped_apps(scroll_script)
 
@@ -20,25 +20,52 @@ def process_url(url, scroll_script, retries, acknowledgements, collect_author=Tr
     r_server = redis.Redis(google_prop.redis_host, google_prop.redis_port)
     for application in applications:
         if application['app_price'] != -1:
-            application_key = google_prop.application_index_prefix + application['app_id']
-            serialized_existing_application = r_server.get(application_key)
+            application_index_key = google_prop.application_index_prefix + application['app_id']
+            application_data_key = google_prop.application_data_prefix + application['app_id']
+            serialized_existing_application = r_server.get(application_index_key)
             if serialized_existing_application is not None:
                 existing_application = pickle.loads(serialized_existing_application)
                 existing_price_data = existing_application['price_data']
                 existing_price_data[str(current_time_millisecond())] = application['app_price']
                 application['price_data'] = existing_price_data
-                # r_server.srem(google_prop.author_urls_set_key, url)  # Remove author
-
                 existing_price = existing_application['app_price']
                 new_price = application['app_price']
                 # TODO: Notification should happen down here
                 if new_price < existing_price:
-                    r_server.sadd(google_prop.price_decreased_applications_set_key, application_key)
-                    r_server.srem(google_prop.price_increased_applications_set_key, application_key)
+                    r_server.sadd(google_prop.price_decreased_applications_set_key, application_index_key)
+                    r_server.srem(google_prop.price_increased_applications_set_key, application_index_key)
+
+                    ## store application data for the price changed application
+                    application_scraper = ApplicationScraper()
+                    application_data = application_scraper.scrape(application['app_id'], application['app_url'])
+                    application_data['price_data'] = application['price_data']
+                    application_data['price'] = application['app_price']
+                    application_data['author_url'] = application['author_url']
+                    serialized_application_data = pickle.dumps(application_data)
+                    r_server.set(application_data_key, serialized_application_data)
+
+                    ## if the application have badges, add it's author url to author_urls_to_index set
+                    if application_data['badges'] > 0:
+                        r_server.sadd(google_prop.author_urls_set_key, application_data['author_url'])
+                        pass
                     pass
                 elif new_price > existing_price:
-                    r_server.sadd(google_prop.price_increased_applications_set_key, application_key)
-                    r_server.srem(google_prop.price_decreased_applications_set_key, application_key)
+                    r_server.sadd(google_prop.price_increased_applications_set_key, application_index_key)
+                    r_server.srem(google_prop.price_decreased_applications_set_key, application_index_key)
+
+                    ## store application data for the price changed application
+                    application_scraper = ApplicationScraper()
+                    application_data = application_scraper.scrape(application['app_id'], application['app_url'])
+                    application_data['price_data'] = application['price_data']
+                    application_data['price'] = application['app_price']
+                    application_data['author_url'] = application['author_url']
+                    serialized_application_data = pickle.dumps(application_data)
+                    r_server.set(application_data_key, serialized_application_data)
+
+                    ## if the application have badges, add it's author url to author_urls_to_index set
+                    if application_data['badges'] > 0:
+                        r_server.sadd(google_prop.author_urls_set_key, application_data['author_url'])
+                        pass
                     pass
                 pass
             else:
@@ -49,8 +76,8 @@ def process_url(url, scroll_script, retries, acknowledgements, collect_author=Tr
                     pass
                 pass
             serialized_data = pickle.dumps(application)
-            r_server.set(application_key, serialized_data)
-            r_server.srem(google_prop.not_updated_set_key, application_key)
+            r_server.set(application_index_key, serialized_data)
+            r_server.srem(google_prop.not_updated_set_key, application_index_key)
             pass
         pass
     pass
@@ -68,7 +95,7 @@ def process_catalog_url(url):
     retries = 5
     acknowledgements = 2
     scroll_script = open("util/js_scripts/catalog_scroll_page.js").read()
-    process_url(url, scroll_script, retries, acknowledgements)
+    process_url(url, scroll_script, retries, acknowledgements, collect_author=False)
     pass
 
 
@@ -133,5 +160,4 @@ if __name__ == '__main__':
     logging.info('start : ' + time.strftime("%Y:%m:%d:_%H:%M"))
     main()
     logging.info('finish : ' + time.strftime("%Y:%m:%d:_%H:%M"))
-
     pass
