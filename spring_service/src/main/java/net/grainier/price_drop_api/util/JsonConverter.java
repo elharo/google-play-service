@@ -1,4 +1,4 @@
-package net.grainier.google_play_service.util;
+package net.grainier.price_drop_api.util;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.DeserializationConfig;

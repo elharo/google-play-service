@@ -2,10 +2,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.springapp</groupId>
-    <artifactId>google-play-service</artifactId>
+    <artifactId>price-drop-api</artifactId>
     <packaging>war</packaging>
     <version>0.0.1</version>
-    <name>Google Play Service</name>
+    <name>Application Price Drop API</name>
 
     <properties>
         <spring.version>3.2.0.RELEASE</spring.version>
@@ -115,7 +115,7 @@
     </dependencies>
 
     <build>
-        <finalName>google-play-service</finalName>
+        <finalName>price-drop-api</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -145,7 +145,7 @@
                             <maxIdleTime>60000</maxIdleTime>
                         </connector>
                     </connectors>
-                    <contextPath>/google-play-service</contextPath>
+                    <contextPath>/price-drop-api</contextPath>
                     <scanIntervalSeconds>3</scanIntervalSeconds>
                 </configuration>
                 <executions>

@@ -1,6 +1,6 @@
-package net.grainier.google_play_service.util;
+package net.grainier.price_drop_api.util;
 
-import net.grainier.google_play_service.util.enums.ResponseStatusEnum;
+import net.grainier.price_drop_api.util.enums.ResponseStatusEnum;
 
 import java.util.ArrayList;
 import java.util.List;

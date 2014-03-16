@@ -1,4 +1,4 @@
-package net.grainier.google_play_service.util.enums;
+package net.grainier.price_drop_api.util.enums;
 
 /**
  * Created by grainierp on 1/22/14.

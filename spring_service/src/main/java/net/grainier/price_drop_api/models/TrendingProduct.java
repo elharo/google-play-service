@@ -1,6 +1,6 @@
-package net.grainier.google_play_service.models;
+package net.grainier.price_drop_api.models;
 
-import net.grainier.google_play_service.util.enums.EventType;
+import net.grainier.price_drop_api.util.enums.EventType;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.ArrayList;
