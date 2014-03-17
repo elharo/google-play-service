@@ -12,10 +12,10 @@ import redis.clients.jedis.Jedis;
  * Created by grainier on 3/16/14.
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping("apple/")
 public class AppleController {
-    @Autowired
-    private Jedis appleRedisClient;
+    // @Autowired
+    // private Jedis appleRedisClient;
     @Autowired
     private ApplicationContext appContext;
     private static final Logger logger = LoggerFactory.getLogger(AppleController.class);

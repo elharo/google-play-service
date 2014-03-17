@@ -1,11 +1,12 @@
 package net.grainier.price_drop_api.util;
 
-import java.util.List;
-
-public class ResponseContainer<T> {
-    private String resCode;
-    private String resMessage;
-    private List<T> resData;
+/**
+ * Generic response container for KDE responses
+ */
+public class ResponseContainer {
+    private String resCode; //Response code
+    private String resMessage; //Textual message for the response code
+    private Object resData; //Data to be returned
 
     public String getResCode() {
         return resCode;
@@ -23,11 +24,11 @@ public class ResponseContainer<T> {
         this.resMessage = resMessage;
     }
 
-    public List<T> getResData() {
+    public Object getResData() {
         return resData;
     }
 
-    public void setResData(List<T> resData) {
+    public void setResData(Object resData) {
         this.resData = resData;
     }
 }

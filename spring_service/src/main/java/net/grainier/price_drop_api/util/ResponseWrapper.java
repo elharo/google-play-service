@@ -1,42 +1,25 @@
 package net.grainier.price_drop_api.util;
 
+
 import net.grainier.price_drop_api.util.enums.ResponseStatusEnum;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
-public class ResponseWrapper<T> {
-
-	public ResponseContainer<T> Wrap(List<T> ol,ResponseStatusEnum status,String message) {
-	
-		ResponseContainer<T> rc = new ResponseContainer<T>();
-		
-		try {
-			rc.setResData(ol);
-			rc.setResCode(status.toString());
-			rc.setResMessage(message);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return rc;
-	}
-
-    public ResponseContainer<T> WrapSingle(T obj,ResponseStatusEnum status,String message) {
-
-        ResponseContainer<T> rc = new ResponseContainer<T>();
+/**
+ * Wrapper used to wrap the response
+ */
+public class ResponseWrapper {
+    //Method to wrap the data object to the common KDE response format
+    public ResponseContainer Wrap(Object resData, ResponseStatusEnum status) {
+        ResponseContainer rc = new ResponseContainer();
 
         try {
-            rc.setResData(new ArrayList<T>());
-            rc.getResData().add(obj);
-            rc.setResCode(status.toString());
-            rc.setResMessage(message);
-        } catch (Exception e) {
+            rc.setResCode(String.valueOf(status.getValue()));
+            rc.setResMessage(String.valueOf(status));
+            rc.setResData(resData);
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
         return rc;
     }
-	
 }

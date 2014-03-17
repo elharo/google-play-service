@@ -12,10 +12,10 @@ import redis.clients.jedis.Jedis;
  * Created by grainier on 3/16/14.
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping("windows/")
 public class WindowsController {
-    @Autowired
-    private Jedis windowsRedisClient;
+    // @Autowired
+    // private Jedis windowsRedisClient;
     @Autowired
     private ApplicationContext appContext;
     private static final Logger logger = LoggerFactory.getLogger(WindowsController.class);

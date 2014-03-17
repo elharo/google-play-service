@@ -9,17 +9,17 @@
 		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"
        default-autowire="byName">
 
-    <bean id="googleRedisClient" class="redis.clients.jedis.Jedis" scope="request">
+    <bean id="googleRedisClient" class="redis.clients.jedis.Jedis" scope="prototype">
         <constructor-arg index="0" value="${google.redis.hostname}"/>
         <constructor-arg index="1" value="${google.redis.port}"/>
     </bean>
 
-    <bean id="appleRedisClient" class="redis.clients.jedis.Jedis" scope="request">
+    <bean id="appleRedisClient" class="redis.clients.jedis.Jedis" scope="prototype">
         <constructor-arg index="0" value="${apple.redis.hostname}"/>
         <constructor-arg index="1" value="${apple.redis.port}"/>
     </bean>
 
-    <bean id="windowsRedisClient" class="redis.clients.jedis.Jedis" scope="request">
+    <bean id="windowsRedisClient" class="redis.clients.jedis.Jedis" scope="prototype">
         <constructor-arg index="0" value="${windows.redis.hostname}"/>
         <constructor-arg index="1" value="${windows.redis.port}"/>
     </bean>
