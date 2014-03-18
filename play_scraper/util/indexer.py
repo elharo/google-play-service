@@ -1,5 +1,7 @@
+import random
+
 __author__ = 'grainier'
-from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS
+from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS, DesiredCapabilities
 import time
 
 
@@ -10,10 +12,23 @@ class ApplicationIndexer(object):
         self.attempt = 0
         self.retries = retries
         self.acknowledgements = acknowledgements
+
+        self.pp = dict(DesiredCapabilities.PHANTOMJS)
+        self.pp["phantomjs.page.settings.userAgent"] = self.get_random_user_agent()
+        self.sa = ['--load-images=no', '--proxy=xx.xx.xx.xx:xxxx']
+        
         # self.fp = FirefoxProfile()
         # self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         # self.fp.set_preference('permissions.default.image', 2)                          # Disable images
         # self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
+        # self.fp.set_preference('general.useragent.override', self.get_random_user_agent())
+        pass
+
+    @staticmethod
+    def get_random_user_agent():
+        user_agents = [agent.rstrip('\n') for agent in open("util/user_agents.txt").readlines()]
+        print user_agents[random.randint(0, len(user_agents) - 1)]
+        return user_agents[random.randint(0, len(user_agents) - 1)]
         pass
 
     def get_scraped_apps(self, scroll_script):
@@ -25,8 +40,8 @@ class ApplicationIndexer(object):
         applications = []
         driver = None
         try:
-            driver = PhantomJS(service_args=['--load-images=no'])
-            # driver = Firefox(firefox_profile=self.fp)                                 # TODO : used in testing
+            driver = PhantomJS(desired_capabilities=self.pp, service_args=self.sa)
+            # driver = Firefox(firefox_profile=self.fp)
             driver.get(self.url)
             driver.execute_script(scroll_script)
 

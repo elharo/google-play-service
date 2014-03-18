@@ -1,3 +1,5 @@
+import random
+
 __author__ = 'Grainier Perera'
 import time
 import logging
@@ -84,6 +86,7 @@ def process_url(url, scroll_script, retries, acknowledgements, collect_author=Fa
 
 
 def process_author_url(url):
+    time.sleep(random.randint(10, 30))  # keep delays between process
     retries = 1
     acknowledgements = 0
     scroll_script = open("util/js_scripts/author_scroll_page.js").read()
@@ -92,6 +95,7 @@ def process_author_url(url):
 
 
 def process_catalog_url(url):
+    time.sleep(random.randint(10, 30))  # keep delays between process
     retries = 5
     acknowledgements = 2
     scroll_script = open("util/js_scripts/catalog_scroll_page.js").read()
@@ -127,21 +131,21 @@ def main():
     """ Process the urls list """
     urls = [url.strip() for url in open("index_urls.txt").readlines()]  # Build our 'map' parameters
     pool_indexers = Pool(processes=google_prop.parallel_processes)  # start 2 worker processes
-    pool_indexers.map(process_catalog_url, urls)  # Perform the mapping
+    pool_indexers.map_async(process_catalog_url, urls)  # Perform the mapping
     pool_indexers.close()
     pool_indexers.join()  # wait for the worker processes to exit
 
     """ Process the urls list of authors"""
     author_urls = [author_url.strip() for author_url in r_server.smembers(google_prop.author_urls_set_key)]
-    pool_author_indexers = Pool(processes=google_prop.parallel_processes)  # start 2 worker processes
-    pool_author_indexers.map(process_author_url, author_urls)  # Perform the mapping
+    pool_author_indexers = Pool(processes=google_prop.parallel_processes)
+    pool_author_indexers.map_async(process_author_url, author_urls)  # Perform the mapping
     pool_author_indexers.close()
     pool_author_indexers.join()  # wait for the worker processes to exit
 
     """ Get details of the application keys in the not_updated_applications SET """
     application_keys = r_server.smembers(google_prop.not_updated_set_key)
-    pool_scrapers = Pool(processes=google_prop.parallel_processes)  # start 4 worker processes
-    pool_scrapers.map(scrape_application, application_keys)  # Perform the mapping
+    pool_scrapers = Pool(processes=google_prop.parallel_processes)
+    pool_scrapers.map_async(scrape_application, application_keys)  # Perform the mapping
     pool_scrapers.close()
     pool_scrapers.join()  # wait for the worker processes to exit
 

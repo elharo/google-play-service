@@ -1,11 +1,18 @@
+import random
+
 __author__ = 'grainier'
 from pyquery import PyQuery as pq
 
 
 class ApplicationScraper(object):
-    __user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0'
-
     def __init__(self):
+        self.user_agent = self.get_random_user_agent()
+        pass
+
+    @staticmethod
+    def get_random_user_agent():
+        user_agents = [agent.rstrip('\n') for agent in open("util/user_agents.txt").readlines()]
+        return user_agents[random.randint(0, len(user_agents) - 1)]
         pass
 
     def scrape(self, application_id, application_url):
@@ -14,7 +21,7 @@ class ApplicationScraper(object):
 
         body_content = pq(
             app_url,
-            headers={'User-Agent': self.__user_agent}
+            headers={'User-Agent': self.user_agent}
         )('#body-content')
 
         app_title = self.__get_app_title(body_content)                      # application title
