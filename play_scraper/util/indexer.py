@@ -1,8 +1,9 @@
-import random
-
-__author__ = 'grainier'
+__author__ = 'Grainier Perera'
 from selenium.webdriver import Firefox, FirefoxProfile, PhantomJS, DesiredCapabilities
 import time
+from useragent_rotator import useragent
+from proxy_rotator import proxy
+from properties import google_prop
 
 
 class ApplicationIndexer(object):
@@ -13,22 +14,11 @@ class ApplicationIndexer(object):
         self.retries = retries
         self.acknowledgements = acknowledgements
 
-        self.pp = dict(DesiredCapabilities.PHANTOMJS)
-        self.pp["phantomjs.page.settings.userAgent"] = self.get_random_user_agent()
-        self.sa = ['--load-images=no', '--proxy=xx.xx.xx.xx:xxxx']
-        
         # self.fp = FirefoxProfile()
         # self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
         # self.fp.set_preference('permissions.default.image', 2)                          # Disable images
         # self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
-        # self.fp.set_preference('general.useragent.override', self.get_random_user_agent())
-        pass
-
-    @staticmethod
-    def get_random_user_agent():
-        user_agents = [agent.rstrip('\n') for agent in open("util/user_agents.txt").readlines()]
-        print user_agents[random.randint(0, len(user_agents) - 1)]
-        return user_agents[random.randint(0, len(user_agents) - 1)]
+        # self.fp.set_preference('general.useragent_rotator.override', self.get_random_user_agent())
         pass
 
     def get_scraped_apps(self, scroll_script):
@@ -40,7 +30,10 @@ class ApplicationIndexer(object):
         applications = []
         driver = None
         try:
-            driver = PhantomJS(desired_capabilities=self.pp, service_args=self.sa)
+            desired_capabilities = dict(DesiredCapabilities.PHANTOMJS)
+            desired_capabilities["phantomjs.page.settings.userAgent"] = useragent.get_random_agent(google_prop.user_agent_list_url)
+            service_args = ['--load-images=no', '--proxy=%s' % (proxy.get_random_proxy(google_prop.proxy_list_url))]
+            driver = PhantomJS(desired_capabilities=desired_capabilities, service_args=service_args)
             # driver = Firefox(firefox_profile=self.fp)
             driver.get(self.url)
             driver.execute_script(scroll_script)
@@ -79,7 +72,7 @@ class ApplicationIndexer(object):
             if self.attempt < self.retries:
                 self.attempt += 1
                 time.sleep(10)
-                print 'retry : url [ ' + self.url + ' ] + | attempt [ ' + str(self.attempt) + ' ]'
+                print 'retry : url [ ' + self.url + ' ] + | attempt [ ' + str(self.attempt) + ' ] | error [ ' + str(e) + ' ]'
                 applications = self.get_applications_in_page(scroll_script)
                 pass
             else:

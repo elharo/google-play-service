@@ -1,10 +1,9 @@
-import random
-
 __author__ = 'Grainier Perera'
 import time
 import logging
 import pickle
 import redis
+import random
 from util.current_time import current_time_millisecond
 from properties import google_prop
 from multiprocessing import Pool

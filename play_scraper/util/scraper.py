@@ -1,27 +1,22 @@
-import random
-
-__author__ = 'grainier'
+__author__ = 'Grainier Perera'
 from pyquery import PyQuery as pq
+from useragent_rotator import useragent
+from proxy_rotator import proxy
+from properties import google_prop
 
 
 class ApplicationScraper(object):
     def __init__(self):
-        self.user_agent = self.get_random_user_agent()
-        pass
-
-    @staticmethod
-    def get_random_user_agent():
-        user_agents = [agent.rstrip('\n') for agent in open("util/user_agents.txt").readlines()]
-        return user_agents[random.randint(0, len(user_agents) - 1)]
         pass
 
     def scrape(self, application_id, application_url):
+        user_agent = useragent.get_random_agent(google_prop.user_agent_list_url)
         app_id = application_id
         app_url = application_url
 
         body_content = pq(
             app_url,
-            headers={'User-Agent': self.user_agent}
+            headers={'User-Agent': user_agent}
         )('#body-content')
 
         app_title = self.__get_app_title(body_content)                      # application title
