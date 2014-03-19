@@ -1,1 +1,1 @@
-window.scraperLoadCompleted = true;
+scraperLoadCompleted = true;

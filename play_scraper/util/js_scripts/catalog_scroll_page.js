@@ -1,4 +1,4 @@
-window.scraperLoadCompleted = false;
+scraperLoadCompleted = false;
 var interval = null, previousDocHeight = 0;
 interval = setInterval(function () {
     if (previousDocHeight < document.body.scrollHeight) {
@@ -7,6 +7,6 @@ interval = setInterval(function () {
         previousDocHeight = document.body.scrollHeight;
     } else {
         clearInterval(interval);
-        window.scraperLoadCompleted = true;
+        scraperLoadCompleted = true;
     }
 }, 10000);

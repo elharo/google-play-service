@@ -6,7 +6,7 @@ SCRIPTPATH=$( cd $(dirname $0) ; pwd -P )
 LIST_OF_APPS="build-essential tcl8.5 git python-dev python-pip python-lxml openjdk-7-jdk screen"
 
 # list of python pip libraries to install
-LIST_OF_PY_LIBS="redis pyquery"
+LIST_OF_PY_LIBS="redis pyquery requests"
 
 # Install defined LIST_OF_APPS
 sudo apt-get update

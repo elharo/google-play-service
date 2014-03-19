@@ -4,6 +4,7 @@ import time
 from useragent_rotator import useragent
 from proxy_rotator import proxy
 from properties import google_prop
+from selenium.webdriver.common.proxy import *
 
 
 class ApplicationIndexer(object):
@@ -14,11 +15,18 @@ class ApplicationIndexer(object):
         self.retries = retries
         self.acknowledgements = acknowledgements
 
-        # self.fp = FirefoxProfile()
-        # self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
-        # self.fp.set_preference('permissions.default.image', 2)                          # Disable images
-        # self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
-        # self.fp.set_preference('general.useragent_rotator.override', self.get_random_user_agent())
+        self.fp = FirefoxProfile()
+        #self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
+        self.fp.set_preference('permissions.default.image', 2)                          # Disable images
+        self.fp.set_preference('dom.ipc.plugins.enabled.libflashplayer.so', 'false')    # Disable Flash
+        self.fp.set_preference('general.useragent_rotator.override', useragent.get_random_agent(google_prop.user_agent_list_url))
+        self.fp.set_preference("network.proxy.type", 1)
+
+        self.proxy_details = proxy.get_random_proxy(google_prop.proxy_list_url)
+        self.proxy = Proxy({
+            'httpProxy':  self.proxy_details,
+            'sslProxy': self.proxy_details
+        })
         pass
 
     def get_scraped_apps(self, scroll_script):
@@ -33,18 +41,18 @@ class ApplicationIndexer(object):
             desired_capabilities = dict(DesiredCapabilities.PHANTOMJS)
             desired_capabilities["phantomjs.page.settings.userAgent"] = useragent.get_random_agent(google_prop.user_agent_list_url)
             service_args = ['--load-images=no', '--proxy=%s' % (proxy.get_random_proxy(google_prop.proxy_list_url))]
-            driver = PhantomJS(desired_capabilities=desired_capabilities, service_args=service_args)
-            # driver = Firefox(firefox_profile=self.fp)
+            # driver = PhantomJS(desired_capabilities=desired_capabilities, service_args=service_args)
+            driver = Firefox(firefox_profile=self.fp, proxy=self.proxy)
             driver.get(self.url)
             driver.execute_script(scroll_script)
 
             acknowledge = 0
             done = False
             while not done:
-                scroll_finished = driver.execute_script("return window.scraperLoadCompleted")
+                scroll_finished = driver.execute_script("return scraperLoadCompleted")
                 if scroll_finished:
                     if acknowledge == self.acknowledgements:
-                        done = driver.execute_script("return window.scraperLoadCompleted")
+                        done = driver.execute_script("return scraperLoadCompleted")
                         pass
                     else:
                         acknowledge += 1
