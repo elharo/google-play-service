@@ -14,6 +14,7 @@ class ApplicationIndexer(object):
         self.attempt = 0
         self.retries = retries
         self.acknowledgements = acknowledgements
+        self.proxy_test = google_prop.proxy_test
 
         self.fp = FirefoxProfile()
         #self.fp.set_preference('permissions.default.stylesheet', 2)                     # Disable css
@@ -41,37 +42,47 @@ class ApplicationIndexer(object):
             desired_capabilities = dict(DesiredCapabilities.PHANTOMJS)
             desired_capabilities["phantomjs.page.settings.userAgent"] = useragent.get_random_agent(google_prop.user_agent_list_url)
             service_args = ['--load-images=no', '--proxy=%s' % (proxy.get_random_proxy(google_prop.proxy_list_url))]
-            # driver = PhantomJS(desired_capabilities=desired_capabilities, service_args=service_args)
-            driver = Firefox(firefox_profile=self.fp, proxy=self.proxy)
-            driver.get(self.url)
-            driver.execute_script(scroll_script)
+            driver = PhantomJS(desired_capabilities=desired_capabilities, service_args=service_args)
+            # driver = Firefox(firefox_profile=self.fp, proxy=self.proxy)
 
-            acknowledge = 0
-            done = False
-            while not done:
-                scroll_finished = driver.execute_script("return scraperLoadCompleted")
-                if scroll_finished:
-                    if acknowledge == self.acknowledgements:
-                        done = driver.execute_script("return scraperLoadCompleted")
+            if self.proxy_test:
+                driver.get('http://curlmyip.com/')
+                ip = driver.find_element_by_xpath('//body//pre').text
+                print('ip : [ ' + ip + ' ]')
+                pass
+            else:
+                driver.get(self.url)
+                driver.execute_script(scroll_script)
+
+                acknowledge = 0
+                done = False
+                while not done:
+                    scroll_finished = driver.execute_script("return scraperLoadCompleted")
+                    if scroll_finished:
+                        if acknowledge == self.acknowledgements:
+                            done = driver.execute_script("return scraperLoadCompleted")
+                            pass
+                        else:
+                            acknowledge += 1
+                            pass
                         pass
                     else:
-                        acknowledge += 1
+                        acknowledge = 0
                         pass
+                    time.sleep(5)  # Wait before retry
                     pass
-                else:
-                    acknowledge = 0
-                    pass
-                time.sleep(5)  # Wait before retry
-                pass
 
-            product_matrix = driver.find_elements_by_class_name("card")
-            for application in product_matrix:
-                extracted_application = self.extract_application_data(application)
-                # if extracted_application['app_price'] != -1:
-                applications.append(extracted_application)
-                #pass
+                product_matrix = driver.find_elements_by_class_name("card")
+                for application in product_matrix:
+                    extracted_application = self.extract_application_data(application)
+                    # if extracted_application['app_price'] != -1:
+                    applications.append(extracted_application)
+                    #pass
+                    pass
                 pass
+            driver.quit()
             pass
+
         except Exception as e:
             if driver is not None:
                 driver.quit()

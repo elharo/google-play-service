@@ -1,9 +1,10 @@
-__author__ = 'grainierp'
-parallel_processes = 1
+__author__ = 'Grainier Perera'
+proxy_test = False
+parallel_processes = 2
 redis_host = 'localhost'
 redis_port = '6379'
-proxy_list_url = 'http://grainier.net/data/proxies.txt'
-user_agent_list_url = 'http://grainier.net/data/user_agents.txt'
+proxy_list_url = 'https://dl.dropboxusercontent.com/u/9662664/proxies.txt'
+user_agent_list_url = 'https://dl.dropboxusercontent.com/u/9662664/useragents.txt'
 application_index_prefix = 'application_index:'
 application_data_prefix = 'application_data:'
 not_updated_set_key = 'not_updated_applications'

@@ -1,4 +1,4 @@
-__author__ = 'grainierp'
+__author__ = 'Grainier Perera'
 parallel_processes = 2
 redis_host = 'localhost'
 redis_port = '6381'
